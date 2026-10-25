@@ -37,15 +37,11 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 <main>
 <section class="panel">
 <h1>布教資料メーカー</h1>
-<label class="f">スプレッドシートから入力</label>
-<div class="sz"><button id="shBtn" type="button" style="display:none;font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer">シートを読み込む</button><select id="shRow" style="display:none;flex:1;min-width:0"></select></div>
-<div class="note" id="shMsg"></div>
-<details style="margin-top:8px"><summary style="font-size:13px;cursor:pointer">貼り付け・CSVで入力（HTMLを保存して使う場合はこちら）</summary>
-<div class="note">シートで読み込みたい行のA〜F列を選んでコピーし、下に貼り付けて「反映」を押します（見出し行を含んでも構いません）。</div>
+<details style="margin-top:12px"><summary style="font-size:13px;font-weight:700;cursor:pointer">オプション：シートから貼り付けて入力</summary>
+<div class="note">シートで入力したい行のA〜F列を選んでコピーし、下に貼り付けて「反映」を押します（複数行・見出し行を含んでも構いません）。</div>
 <textarea id="shPaste" placeholder="シートからコピーした内容をここに貼り付け"></textarea>
-<div class="sz"><button id="shPasteBtn" type="button" style="font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer">反映</button></div>
-<div class="note">または、シートを「ファイル→共有→ウェブに公開」でCSV形式に公開して、そのURLを入れます。</div>
-<div class="sz"><input type="text" id="shUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" style="flex:1;min-width:0;font:inherit;font-size:13px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)"><button id="shUrlBtn" type="button" style="font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer">読み込む</button></div>
+<div class="sz"><button id="shPasteBtn" type="button" style="font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer">反映</button><select id="shRow" style="display:none;flex:1;min-width:0"></select></div>
+<div class="note" id="shMsg"></div>
 </details>
 <label class="f">① 書影（画像を選択）</label>
 <input type="file" id="cover" accept="image/*">
@@ -78,7 +74,7 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 </main>
 <script>
 const W=1920,H=1080,FX=92,FY=9,QUAD=[[0,31],[700,31],[700,1031],[0,1031]];
-const VMARU='"VDL V7丸ゴシック","VDL-V7MaruGothic","VDL Ｖ７丸ゴシック","VDL V7 Maru Gothic","Hiragino Maru Gothic ProN","Zen Maru Gothic","Yu Gothic",sans-serif';
+const VMARU='"Meiryo","メイリオ","Yu Gothic","游ゴシック","Hiragino Sans",sans-serif';
 const MINCHO='"HGP明朝E","HGPMinchoE","HGP明朝E (TrueType)","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif';
 const FONT='"Hiragino Maru Gothic ProN","Zen Maru Gothic","Yu Gothic","Noto Sans JP",sans-serif';
 const $=id=>document.getElementById(id);
@@ -213,10 +209,15 @@ function render(){
     const a=rgb(S.bgTop),c=rgb(S.bgBottom),f=rgb(S.frame),k=Math.min(1,(y+75)/H);
     const eff=a.map((v,j)=>(v+(c[j]-v)*k)*.72+f[j]*.28);
     ctx.fillStyle=S.ptext||(lum(eff)>140?(lum(f)<110?S.frame:'#1c2330'):'#ffffff');
-    const oS=manual('o'),oR=drawBlock($('p'+(i+1)).value,...P('p'+(i+1),915,y+8,940,148),940,148,oS||34,oS||18,'400','left',VMARU);if(oR&&!oS)lastSz.o=i?Math.min(lastSz.o,oR):oR;
+    const oS=manual('o'),oR=drawBlock($('p'+(i+1)).value,...P('p'+(i+1),915,y+8,940,148),940,148,oS||34,oS||18,'700','left',VMARU);if(oR&&!oS)lastSz.o=i?Math.min(lastSz.o,oR):oR;
   });
   const cr=$('credit').value.trim();
-  if(cr){ctx.save();ctx.font='400 16px '+FONT;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=lum(rgb(S.bgBottom))>140?'rgba(28,35,48,.55)':'rgba(255,255,255,.6)';ctx.fillText('書影出典：'+cr,20,1068);ctx.restore()}
+  if(cr){ctx.save();const txt='書影出典：'+cr;let fs=22;ctx.textAlign='left';ctx.textBaseline='middle';ctx.lineJoin='round';
+    for(;fs>12;fs-=2){ctx.font='700 '+fs+'px '+FONT;if(ctx.measureText(txt).width<=W-FX-24)break}
+    ctx.font='700 '+fs+'px '+FONT;
+    const ty=H-20;
+    ctx.lineWidth=Math.max(5,Math.round(fs*.34));ctx.strokeStyle=S.palette[0]||S.frame;ctx.strokeText(txt,FX,ty);
+    ctx.fillStyle='#ffffff';ctx.fillText(txt,FX,ty);ctx.restore()}
   $('dl').disabled=false;
 }
 $('cover').onchange=e=>{
@@ -239,9 +240,7 @@ $('mv').addEventListener('change',()=>{cv.style.cursor=$('mv').checked?'move':'d
 $('rs').onclick=()=>{for(const k in off)off[k]=[0,0];render()};
 const lastSz={a:32,o:28};$('shd').addEventListener('change',render);
 document.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{const [dx,dy]=b.dataset.d.split(',').map(Number),s=+$('stp').value||1,o=off[$('tg').value];o[0]+=dx*s;o[1]+=dy*s;render()});
-const SHEET_ID='1ztVg4wLbx-yEoifL9NISlpu42JzosUTgtiiXyYd0EWU',SHEET_NAME='布教対象';
-let _mcp=null,shRows=[];
-try{claude.use('mcp').then(m=>{if(m){_mcp=m;$('shBtn').style.display='';$('shMsg').textContent='「シートを読み込む」を押すと、書名の一覧から行を選べます。'}}).catch(()=>{})}catch(e){}
+let shRows=[];
 function shApply(i){
   const r=shRows[i];if(!r)return;
   const g=k=>String(r[k]==null?'':r[k]).trim();
@@ -250,25 +249,6 @@ function shApply(i){
   render();
 }
 $('shRow').onchange=()=>shApply(+$('shRow').value);
-$('shBtn').onclick=async()=>{
-  const msg=$('shMsg'),b=$('shBtn'),sel=$('shRow');
-  if(!_mcp)return;
-  b.disabled=true;msg.textContent='読み込み中…';
-  try{
-    const res=await _mcp.callTool('Google Sheets','get_values',{spreadsheetId:SHEET_ID,range:SHEET_NAME+'!A2:F500'});
-    let v=res&&res.payload;
-    if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){v=null}}
-    const vals=(v&&Array.isArray(v.values))?v.values:[];
-    shRows=vals.filter(x=>Array.isArray(x)&&x.some(c=>String(c==null?'':c).trim()));
-    sel.innerHTML='';
-    shRows.forEach((x,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+2)+'行目: '+(String(x[0]||'').trim()||'（無題）');sel.appendChild(o)});
-    if(!shRows.length){sel.style.display='none';msg.textContent='データの行が見つかりませんでした。'}
-    else{sel.style.display='';shApply(0);msg.textContent=shRows.length+'件読み込みました。選んだ行が入力欄に入ります。'}
-  }catch(e){
-    const c=e&&e.code;
-    msg.textContent=c==='server_not_connected'?'Google Sheetsが接続されていません。claude.aiの設定のコネクタから接続してください。':c==='needs_reauth'?'Google Sheetsの接続の期限が切れています。claude.aiの設定のコネクタで再接続してください。':(c==='approval_required'||c==='not_in_manifest'||c==='not_granted')?'Google Sheetsの利用が許可されていません。もう一度押して、許可してください。':c==='tool_error'?'シートを読み込めませんでした。シート名・範囲、閲覧権限を確認してください。':'読み込みに失敗しました。（'+(c||'error')+'）';
-  }finally{b.disabled=false}
-};
 function parseTable(t){
   const d=t.split(/\r?\n/)[0].indexOf('\t')>=0?'\t':',',rows=[];let row=[],c='',q=false;
   for(let i=0;i<t.length;i++){const ch=t[i];
@@ -290,13 +270,6 @@ function shFill(vals){
   else{sel.style.display='';shApply(0);msg.textContent=shRows.length+'件読み込みました。選んだ行が入力欄に入ります。'}
 }
 $('shPasteBtn').onclick=()=>{const t=$('shPaste').value;if(!t.trim()){$('shMsg').textContent='貼り付け欄が空です。';return}shFill(parseTable(t))};
-$('shUrlBtn').onclick=async()=>{
-  const u=$('shUrl').value.trim(),msg=$('shMsg');
-  if(!/^https:\/\/docs\.google\.com\//.test(u)){msg.textContent='Googleスプレッドシートの公開URLを入れてください。';return}
-  msg.textContent='読み込み中…';
-  try{const r=await fetch(u);if(!r.ok)throw new Error(r.status);shFill(parseTable(await r.text()))}
-  catch(e){msg.textContent='URLから読み込めませんでした。公開設定とURLを確認するか、貼り付けの方法を使ってください。'}
-};
 function manual(p){return $(p+'Auto').checked?0:+$(p+'Size').value}
 ['aAuto','aSize','oAuto','oSize'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>{
   if(!$('aAuto').checked&&$('aSize').disabled)$('aSize').value=lastSz.a;
