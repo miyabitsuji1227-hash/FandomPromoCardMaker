@@ -42,7 +42,7 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 <body>
 <main>
 <section class="panel">
-<a href="./index.html" style="display:inline-block;font-size:13px;color:var(--sub);text-decoration:none;margin-bottom:8px">← メーカー選択に戻る</a>
+<a href="./index.html" style="display:inline-block;font-size:13px;font-weight:700;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-decoration:none;margin-bottom:12px">← メーカー選択に戻る</a>
 <h1>布教資料メーカー（感想）</h1>
 <div class="note">書影を選ぶと、その色から背景・装飾の色を自動で作ります。色はあとから下で変えられます。</div>
 
@@ -374,8 +374,8 @@ $('shPasteBtn').onclick=()=>{const t=$('shPaste').value;if(!t.trim()){$('shMsg')
 $('dl').onclick=()=>{
   cv.toBlob(async blob=>{
     let dl=null;try{if(typeof claude!=='undefined'&&claude.use)dl=await claude.use('downloads')}catch(e){}
-    if(!dl){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='感想.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);$('msg').textContent='';return}
-    try{await dl.save({filename:'感想.png',data:blob});$('msg').textContent=''}
+    if(!dl){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='布教資料_長文.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);$('msg').textContent='';return}
+    try{await dl.save({filename:'布教資料_長文.png',data:blob});$('msg').textContent=''}
     catch(e){if(e.code!=='declined')$('msg').textContent='保存できませんでした：'+(e.message||e.code)}
   },'image/png');
 };
