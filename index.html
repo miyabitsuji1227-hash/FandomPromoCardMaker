@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>布教資料メーカー</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1c2330;--sub:#667085;--line:#d9dde4;--acc:#1c2330}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1e232c;--ink:#eef0f4;--sub:#9aa3b2;--line:#323a47;--acc:#eef0f4}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.6}
+main{max-width:820px;margin:0 auto;padding:48px 16px calc(48px + env(safe-area-inset-bottom,0px))}
+h1{font-size:24px;margin:0 0 4px;text-align:center}
+.lead{text-align:center;color:var(--sub);font-size:14px;margin:0 0 32px}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.menu{grid-template-columns:1fr}}
+.menu a{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;color:var(--ink);text-decoration:none;transition:border-color .15s,transform .15s}
+.menu a:hover,.menu a:focus-visible{border-color:var(--acc);transform:translateY(-2px)}
+.tag{display:inline-block;align-self:flex-start;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--acc);color:var(--card);margin-bottom:12px}
+.menu h2{font-size:18px;margin:0 0 8px}
+.menu p{font-size:13px;color:var(--sub);margin:0 0 16px;flex:1}
+.menu ul{font-size:13px;margin:0 0 16px;padding-left:1.2em}
+.go{font-size:14px;font-weight:700}
+.note{text-align:center;font-size:12px;color:var(--sub);margin-top:32px}
+</style>
+</head>
+<body>
+<main>
+<h1>布教資料メーカー</h1>
+<p class="lead">書影と文章を入れるだけで、布教用の画像（1920×1080）が作れます。<br>作りたい資料を選んでください。</p>
+<div class="menu">
+  <a href="./index_Shorts.html">
+    <span class="tag">短文用</span>
+    <h2>あらすじ＋オススメポイント</h2>
+    <p>あらすじと、70文字ほどのオススメポイント3つで作品を紹介します。</p>
+    <span class="go">短文用メーカーを開く →</span>
+  </a>
+  <a href="./index_long.html">
+    <span class="tag">長文用</span>
+    <h2>感想＋まとめ</h2>
+    <p>長めの感想と「つまり ○○ ってこと！」のまとめで、熱量をそのまま伝えます。</p>
+    <span class="go">長文用メーカーを開く →</span>
+  </a>
+</div>
+<p class="note">作った画像は、各メーカーの「PNGを保存」から保存できます。</p>
+</main>
+</body>
+</html>
