@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>布教資料メーカー（感想）</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1c2330;--sub:#667085;--line:#d9dde4;--acc:#1c2330;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1e232c;--ink:#eef0f4;--sub:#9aa3b2;--line:#323a47;--acc:#eef0f4}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.5}
+main{max-width:1320px;margin:0 auto;padding:16px;display:grid;grid-template-columns:400px 1fr;gap:16px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+h1{font-size:18px;margin:0 0 4px}
+h2{font-size:14px;margin:20px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
+label.f{display:block;font-size:13px;font-weight:700;margin:12px 0 4px}
+input[type=text],textarea{width:100%;font:inherit;font-size:14px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+textarea{resize:vertical;min-height:62px}
+#kanso{min-height:220px}
+.cnt{font-size:12px;color:var(--sub);text-align:right}
+.row{margin-top:10px}.row b{font-size:13px;display:block;margin-bottom:4px}
+.row b small{font-weight:400;color:var(--sub)}
+.sw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sw button{width:28px;height:28px;border-radius:6px;border:2px solid var(--line);cursor:pointer;padding:0}
+.sw button.on{border-color:var(--acc);outline:2px solid var(--card);outline-offset:-4px}
+.sw button.auto{width:auto;padding:0 8px;font-size:12px;color:var(--ink);background:var(--bg)}
+.sw input[type=color]{width:34px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.btn{margin-top:16px;width:100%;padding:12px;font:inherit;font-weight:700;border:0;border-radius:8px;background:var(--acc);color:var(--card);cursor:pointer}
+.btn:disabled{opacity:.4;cursor:default}
+.preview{position:sticky;top:8px;align-self:start}
+canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid var(--line)}
+.sz{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:6px;flex-wrap:wrap}
+.sz>span:first-child{width:56px;font-weight:700}
+.sz input[type=number],.sz select{font:inherit;font-size:13px;padding:4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.sz input[type=number]{width:72px}
+.pad{display:flex;gap:6px;margin-top:6px}
+.pad button,.sbtn{flex:1;padding:8px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer}
+.note{font-size:12px;color:var(--sub);margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+<section class="panel">
+<h1>布教資料メーカー（感想）</h1>
+<div class="note">書影を選ぶと、その色から背景・装飾の色を自動で作ります。色はあとから下で変えられます。</div>
+
+<details style="margin-top:12px"><summary style="font-size:13px;font-weight:700;cursor:pointer">オプション：シートから貼り付けて入力</summary>
+<div class="note">A列＝タイトル、B列＝書影出典、C列＝感想、D列＝まとめ。シートで行のA〜D列を選んでコピーし、下に貼り付けて「反映」を押します（複数行・見出し行を含んでも構いません。CSVも可）。</div>
+<textarea id="shPaste" placeholder="シートからコピーした内容をここに貼り付け"></textarea>
+<div class="sz"><button id="shPasteBtn" type="button" class="sbtn" style="flex:0 0 auto;padding:6px 12px">反映</button><select id="shRow" style="display:none;flex:1;min-width:0"></select></div>
+<div class="note" id="shMsg"></div>
+</details>
+
+<label class="f">① 書影（画像を選択）</label>
+<input type="file" id="cover" accept="image/*">
+<label style="font-size:13px;display:block;margin-top:6px"><input type="checkbox" id="shd" checked> 書影に影をつける</label>
+<label class="f">書影の出典（左下に小さく表示）</label>
+<input type="text" id="credit" placeholder="例: 版元ドットコム">
+
+<label class="f">② 感想（長文OK）</label>
+<textarea id="kanso" placeholder="感想を入力（改行もそのまま反映されます）"></textarea>
+<div class="cnt" id="kc">0文字</div>
+
+<label class="f">③ まとめ（「つまり ○○ ってこと！」の○○）</label>
+<textarea id="matome" placeholder="例: 全人類読むべき" style="min-height:44px"></textarea>
+<div class="cnt" id="mc">0文字</div>
+
+<h2>文字の設定</h2>
+<div class="sz"><span>感想</span><label><input type="checkbox" id="kAuto" checked> 自動</label><input type="number" id="kSize" min="8" max="120" value="30" disabled><span>px</span><label><input type="checkbox" id="kBold" checked> 太字</label></div>
+<div class="sz"><span></span><select id="kFont"></select><label><input type="checkbox" id="kRule" checked> 罫線に沿わせる</label></div>
+<div class="sz"><span>まとめ</span><label><input type="checkbox" id="mAuto" checked> 自動</label><input type="number" id="mSize" min="8" max="160" value="64" disabled><span>px</span><label><input type="checkbox" id="mBold" checked> 太字</label></div>
+<div class="sz"><span></span><select id="mFont"></select><label><input type="checkbox" id="mEdge" checked> 白フチ</label></div>
+<div class="note">「罫線に沿わせる」は、文字が収まる間は1行ずつ罫線の上に並べます。長すぎて収まらないときは自動で行間を詰めます。</div>
+
+<label class="f">位置の微調整</label>
+<div class="sz"><select id="tg"><option value="k">感想</option><option value="m">まとめ</option></select><span style="width:auto">移動量</span><input type="number" id="stp" min="1" max="200" value="5"><span>px</span></div>
+<div class="pad"><button type="button" data-d="-1,0">←</button><button type="button" data-d="0,-1">↑</button><button type="button" data-d="0,1">↓</button><button type="button" data-d="1,0">→</button></div>
+
+<h2>色（書影から自動作成。クリックで変更）</h2>
+<div id="colors"></div>
+<button class="sbtn" id="reauto" type="button" style="width:100%;margin-top:10px">色を書影から作り直す</button>
+
+<button class="btn" id="dl">PNGを保存</button>
+<div class="note" id="msg"></div>
+</section>
+<section class="panel preview">
+<div class="sz" style="margin:0 0 8px"><label><input type="checkbox" id="mv"> ドラッグで文字の位置を動かす（感想・まとめ）</label><button id="rs" type="button" class="sbtn" style="flex:0 0 auto;margin-left:auto;padding:4px 8px;font-size:12px">位置をリセット</button></div>
+<canvas id="cv" width="1920" height="1080"></canvas>
+<div class="note">1920×1080。保存できない環境では、画像を長押し／右クリックで保存してください。</div>
+</section>
+</main>
+<script>
+const W=1920,H=1080;
+const COVER={x:80,y:28,w:733,h:1024};
+const RULE={x:541,y:36,pitch:47.65};
+const KBOX={x:892,y:84,w:948,h:714};      // 感想エリア（罫線2〜16本目）
+const MBOX={x:880,y:888,w:980,h:104};     // まとめエリア（つまり〜ってこと！の間）
+const FONTS={
+  meiryo:['メイリオ','"Meiryo","メイリオ","Hiragino Sans","Noto Sans JP",sans-serif'],
+  yugo:['游ゴシック','"Yu Gothic","游ゴシック","YuGothic","Hiragino Sans","Noto Sans JP",sans-serif'],
+  maru:['HG丸ゴシックM-PRO','"HG丸ｺﾞｼｯｸM-PRO","HGMaruGothicMPRO","Hiragino Maru Gothic ProN","Zen Maru Gothic",sans-serif'],
+  mincho:['明朝（HGP明朝E）','"HGP明朝E","HGPMinchoE","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif']
+};
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+for(const s of ['kFont','mFont'])for(const k in FONTS){const o=document.createElement('option');o.value=k;o.textContent=FONTS[k][0];$(s).appendChild(o)}
+$('kFont').value='meiryo';$('mFont').value='meiryo';
+
+/* ---------- 素材 ---------- */
+const IM={};
+const SRC={grad:'grad.png',tape:'tape.png',rule:'rule.png',flower1:'flower1.png',dokuryo:'dokuryo.png',panel:'panel.png',flower2:'flower2.png',matome:'matome.png'};
+let loaded=0;const NEED=Object.keys(SRC).length;
+for(const k in SRC){const i=new Image();i.onload=()=>{if(++loaded===NEED)render()};i.src='assets/'+SRC[k];IM[k]=i}
+
+/* ---------- 色ユーティリティ ---------- */
+const lum=([r,g,b])=>.299*r+.587*g+.114*b;
+const hex=c=>'#'+c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const rgb=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+function toHsl(h){let [r,g,b]=rgb(h).map(v=>v/255);const M=Math.max(r,g,b),m=Math.min(r,g,b),l=(M+m)/2;let hh=0,s=0;
+  if(M!==m){const d=M-m;s=l>.5?d/(2-M-m):d/(M+m);hh=M===r?(g-b)/d+(g<b?6:0):M===g?(b-r)/d+2:(r-g)/d+4;hh/=6}return[hh,s,l]}
+function fromHsl(h,s,l){const f=n=>{const k=(n+h*12)%12,a=s*Math.min(l,1-l);return l-a*Math.max(-1,Math.min(k-3,9-k,1))};return hex([f(0),f(8),f(4)].map(v=>v*255))}
+// 色相・彩度はそのまま、明るさだけを指定値に
+const atL=(h,l,smax=1,smin=0)=>{const [hh,s]=toHsl(h);return fromHsl(hh,Math.max(smin,Math.min(s,smax)),l)};
+const ROLE={
+  bgA:h=>atL(h,.80,.7,.25),     // 明るい色1（グラデの濃い側）
+  bgB:h=>atL(h,.92,.7,.2),     // 明るい色2（グラデの明るい側）
+  mid:h=>atL(h,.58,.55),    // 中間色
+  dark:h=>atL(h,.40,.55),   // 中間色より少し濃いめ
+  textK:h=>atL(h,.15,.35),
+  textM:h=>atL(h,.40,.55),
+  tape:h=>atL(h,.62,.35)
+};
+
+function extract(img){
+  const c=document.createElement('canvas'),s=64;c.width=c.height=s;
+  const x=c.getContext('2d');x.drawImage(img,0,0,s,s);
+  const d=x.getImageData(0,0,s,s).data,m=new Map();
+  for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;
+    const k=(d[i]>>4)*256+(d[i+1]>>4)*16+(d[i+2]>>4);
+    const e=m.get(k)||{n:0,r:0,g:0,b:0};e.n++;e.r+=d[i];e.g+=d[i+1];e.b+=d[i+2];m.set(k,e)}
+  const sat=([r,g,b])=>{const M=Math.max(r,g,b),n=Math.min(r,g,b);return M?(M-n)/M:0};
+  const tot=[...m.values()].reduce((a,e)=>a+e.n,0);
+  const all=[...m.values()].map(e=>{const c=[e.r/e.n,e.g/e.n,e.b/e.n];return{c,n:e.n,sat:sat(c)}}).filter(e=>e.n>=tot*.002);
+  if(!all.length)return [];
+  const near=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])<45;
+  const out=[];const add=c=>{if(c&&!out.some(o=>near(o,c)))out.push(c)};
+  all.slice().sort((a,b)=>b.n*(1+3*b.sat)-a.n*(1+3*a.sat)).forEach(e=>{if(out.length<9)add(e.c)});
+  return out.map(hex);
+}
+const S={cover:null,palette:[],bgA:'#cfcfcf',bgB:'#fafafa',mid:'#8a8a8a',dark:'#555555',textK:'#1e1e1e',textM:'#555555',tape:'#a5a5a5',autoDark:true,autoTextK:true,autoTextM:true,autoTape:true};
+function autoColors(){
+  const p=S.palette;if(!p.length)return;
+  const sv=h=>toHsl(h)[1]*(1-Math.abs(toHsl(h)[2]-.5));
+  const byV=[...p].sort((a,b)=>sv(b)-sv(a));
+  const hd=(a,b)=>{const d=Math.abs(toHsl(a)[0]-toHsl(b)[0]);return Math.min(d,1-d)};
+  const main=byV[0],sub=byV.find(h=>hd(h,main)>.12&&toHsl(h)[1]>.15)||byV[1]||main;
+  S.bgA=ROLE.bgA(main);S.bgB=ROLE.bgB(sub);S.mid=ROLE.mid(main);
+  S.autoDark=true;S.autoTextK=true;S.autoTextM=true;randomTape();syncAuto();
+}
+function syncAuto(){if(S.autoDark)S.dark=atL(S.mid,Math.max(.12,toHsl(S.mid)[2]-.18));if(S.autoTextK)S.textK=darkest();if(S.autoTextM)S.textM=S.dark}
+// 付箋：書影の色からランダムに1色
+function randomTape(){const c=[...new Set(S.palette.map(ROLE.tape))].filter(h=>h!==S.tape);if(!c.length)return;S.tape=c[Math.floor(Math.random()*c.length)];S.autoTape=false}
+// 書影の中で一番暗い色（書影がなければ濃いグレー）
+function darkest(){const p=S.palette;if(!p.length)return '#1e1e1e';return p.reduce((a,b)=>lum(rgb(b))<lum(rgb(a))?b:a)}
+
+const TARGETS=[
+  ['bgA','背景グラデ（左下）',''],
+  ['bgB','背景グラデ（右上）',''],
+  ['mid','装飾',''],
+  ['textK','文字色（感想）',''],
+  ['textM','文字色（まとめ）',''],
+  ['tape','付箋','書影を選ぶとランダムで決まります']
+];
+function buildColors(){
+  const box=$('colors');box.innerHTML='';
+  for(const [k,label,hint] of TARGETS){
+    const row=document.createElement('div');row.className='row';
+    row.innerHTML='<b>'+label+(hint?' <small>（'+hint+'）</small>':'')+'</b>';
+    const sw=document.createElement('div');sw.className='sw';
+    const autoKey={dark:'autoDark',textK:'autoTextK',textM:'autoTextM',tape:'autoTape'}[k]||null;
+    if(autoKey){const a=document.createElement('button');a.textContent=k==='tape'?'そのまま':'自動';a.className='auto'+(S[autoKey]?' on':'');a.title={tape:'素材のグレーのまま使います',textK:'書影の中で一番暗い色を使います',textM:'装飾に合わせた濃さの色を使います',dark:'中間色に合わせて自動で決めます'}[k];
+      a.onclick=()=>{S[autoKey]=true;syncAuto();buildColors();render()};sw.appendChild(a)}
+    if(k==='tape'&&S.palette.length){const r=document.createElement('button');r.textContent='ランダム';r.className='auto';r.title='書影の色からランダムに選び直します';
+      r.onclick=()=>{randomTape();buildColors();render()};sw.appendChild(r)}
+    const seen=new Set();
+    for(const c0 of S.palette){
+      const c=ROLE[k](c0);if(seen.has(c))continue;seen.add(c);
+      const b=document.createElement('button');b.style.background=c;b.title=c;
+      if(S[k]===c&&!(autoKey&&S[autoKey]))b.classList.add('on');
+      b.onclick=()=>{S[k]=c;if(autoKey)S[autoKey]=false;syncAuto();buildColors();render()};sw.appendChild(b)}
+    const ip=document.createElement('input');ip.type='color';ip.value=S[k];
+    ip.oninput=()=>{S[k]=ip.value;if(autoKey)S[autoKey]=false;syncAuto();render()};
+    ip.onchange=buildColors;
+    sw.appendChild(ip);row.appendChild(sw);box.appendChild(row);
+  }
+}
+
+/* ---------- 着色 ---------- */
+const _tc=new Map();
+// base: 素材の基準の明るさ。基準より暗い部分は暗く、明るい部分は白に向けて明るく（陰影を残す）
+function tint(img,color,base){
+  const key=img.src+color;if(_tc.has(key))return _tc.get(key);
+  if(_tc.size>24)_tc.clear();
+  const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+  const x=c.getContext('2d');x.drawImage(img,0,0);
+  const id=x.getImageData(0,0,c.width,c.height),d=id.data,t=rgb(color);
+  for(let i=0;i<d.length;i+=4){if(!d[i+3])continue;
+    const l=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    if(l<=base){const k=base?l/base:1;for(let j=0;j<3;j++)d[i+j]=t[j]*k}
+    else{const k=(l-base)/(255-base);for(let j=0;j<3;j++)d[i+j]=t[j]+(255-t[j])*k}}
+  x.putImageData(id,0,0);_tc.set(key,c);return c;
+}
+// 背景グラデ素材の明暗を、色1→色2のグラデーションに置き換え
+function gradMap(a,b){
+  const key='grad'+a+b;if(_tc.has(key))return _tc.get(key);
+  const img=IM.grad,c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+  const x=c.getContext('2d');x.drawImage(img,0,0);
+  const id=x.getImageData(0,0,c.width,c.height),d=id.data,A=rgb(a),B=rgb(b),L0=119,L1=254;
+  for(let i=0;i<d.length;i+=4){const k=Math.max(0,Math.min(1,(d[i]-L0)/(L1-L0)));
+    for(let j=0;j<3;j++)d[i+j]=A[j]+(B[j]-A[j])*k;d[i+3]=255}
+  x.putImageData(id,0,0);_tc.set(key,c);return c;
+}
+
+/* ---------- 文字組み ---------- */
+const NOHEAD='、。，．・：；？！ー）」』】〕〉》’”…‥ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ々!?,.)]}';
+function wrap(text,maxW){
+  const lines=[];
+  for(const para of text.split('\n')){
+    let cur='';
+    for(const ch of para){
+      if(cur&&ctx.measureText(cur+ch).width>maxW){
+        if(NOHEAD.includes(ch)){cur+=ch;continue}   // 行頭禁則：前の行にぶら下げ
+        lines.push(cur);cur=ch}else cur+=ch}
+    lines.push(cur);
+  }
+  return lines;
+}
+const fontStr=(s,bold,fam)=>(bold?'700 ':'400 ')+s+'px '+FONTS[fam][1];
+function layoutKanso(text){
+  const bold=$('kBold').checked,fam=$('kFont').value,man=$('kAuto').checked?0:+$('kSize').value;
+  const nRule=Math.floor(KBOX.h/RULE.pitch)+0; // 罫線の行数
+  const tryRule=s=>{ctx.font=fontStr(s,bold,fam);const L=wrap(text,KBOX.w);return L.length<=nRule?L:null};
+  if($('kRule').checked){
+    if(man){ctx.font=fontStr(man,bold,fam);return{s:man,lines:wrap(text,KBOX.w),rule:true}}
+    for(let s=34;s>=20;s--){const L=tryRule(s);if(L)return{s,lines:L,rule:true}}
+  }
+  if(man){ctx.font=fontStr(man,bold,fam);return{s:man,lines:wrap(text,KBOX.w),rule:false}}
+  for(let s=34;s>=12;s--){ctx.font=fontStr(s,bold,fam);const L=wrap(text,KBOX.w);if(L.length*s*1.5<=KBOX.h||s===12)return{s,lines:L,rule:false}}
+}
+const off={k:[0,0],m:[0,0]},hits=[];
+const lastSz={k:30,m:64};
+
+/* ---------- 描画 ---------- */
+function render(){
+  if(loaded<NEED)return;
+  hits.length=0;
+  ctx.clearRect(0,0,W,H);
+  ctx.drawImage(gradMap(S.bgA,S.bgB),0,0,W,H);
+  ctx.drawImage(S.autoTape?IM.tape:tint(IM.tape,S.tape,150),0,28);
+  ctx.drawImage(tint(IM.rule,S.mid,0),RULE.x,RULE.y);
+  ctx.drawImage(tint(IM.flower1,S.mid,84),0,517);
+  ctx.drawImage(tint(IM.dokuryo,S.dark,0),0,0);
+  ctx.drawImage(IM.panel,845,43);
+  ctx.drawImage(tint(IM.flower2,S.dark,33),0,0);
+  // 書影
+  ctx.save();
+  if($('shd').checked){ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=30;ctx.shadowOffsetX=12;ctx.shadowOffsetY=16}
+  if(S.cover){
+    const im=S.cover,r=Math.max(COVER.w/im.naturalWidth,COVER.h/im.naturalHeight),sw=COVER.w/r,sh=COVER.h/r;
+    ctx.drawImage(im,(im.naturalWidth-sw)/2,(im.naturalHeight-sh)/2,sw,sh,COVER.x,COVER.y,COVER.w,COVER.h);
+  }else{ctx.fillStyle='#000';ctx.fillRect(COVER.x,COVER.y,COVER.w,COVER.h)}
+  ctx.restore();
+  if(!S.cover){ctx.fillStyle='#fff';ctx.font='700 40px '+FONTS.meiryo[1];ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('書影を選んでください',COVER.x+COVER.w/2,COVER.y+COVER.h/2)}
+  ctx.drawImage(tint(IM.matome,S.dark,0),840,807);
+
+  // 感想
+  const kt=$('kanso').value;
+  const kx=KBOX.x+off.k[0],ky=KBOX.y+off.k[1];
+  hits.push({id:'k',x:kx,y:ky,w:KBOX.w,h:KBOX.h});
+  if(kt.trim()){
+    const L=layoutKanso(kt);if($('kAuto').checked)lastSz.k=L.s;
+    ctx.font=fontStr(L.s,$('kBold').checked,$('kFont').value);ctx.fillStyle=S.textK;ctx.textAlign='left';
+    if(L.rule){ctx.textBaseline='alphabetic';
+      // 罫線の上に乗せる：KBOX上端の次の罫線から1行ずつ
+      const first=RULE.y+RULE.pitch*2;
+      L.lines.forEach((l,i)=>ctx.fillText(l,kx,first+off.k[1]+i*RULE.pitch-Math.max(7,L.s*.28)));
+    }else{ctx.textBaseline='middle';const lh=L.s*1.5;
+      L.lines.forEach((l,i)=>ctx.fillText(l,kx,ky+lh/2+i*lh))}
+  }
+  // まとめ
+  const mt=$('matome').value;
+  const mx=MBOX.x+off.m[0],my=MBOX.y+off.m[1];
+  hits.push({id:'m',x:mx,y:my,w:MBOX.w,h:MBOX.h});
+  if(mt.trim()){
+    const bold=$('mBold').checked,fam=$('mFont').value,man=$('mAuto').checked?0:+$('mSize').value;
+    let s=man||72,lines;
+    for(;;s-=2){ctx.font=fontStr(s,bold,fam);lines=wrap(mt,MBOX.w);if(man||lines.length*s*1.2<=MBOX.h||s<=20)break}
+    if(!man)lastSz.m=s;
+    const lh=s*1.2,top=my+(MBOX.h-lines.length*lh)/2+lh/2;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+    lines.forEach((l,i)=>{const y=top+i*lh;
+      if($('mEdge').checked){ctx.lineWidth=Math.max(4,s*.24-2);ctx.strokeStyle='#fff';ctx.strokeText(l,mx+MBOX.w/2,y)}
+      ctx.fillStyle=S.textM;ctx.fillText(l,mx+MBOX.w/2,y)});
+  }
+  // 出典
+  const cr=$('credit').value.trim();
+  if(cr){ctx.save();const txt='書影出典：'+cr;let fs=20;ctx.textAlign='left';ctx.textBaseline='middle';ctx.lineJoin='round';
+    for(;fs>12;fs-=2){ctx.font='700 '+fs+'px '+FONTS.meiryo[1];if(ctx.measureText(txt).width<=W-COVER.x-24)break}
+    const ty=H-14;ctx.lineWidth=Math.max(4,Math.round(fs*.32));ctx.strokeStyle=S.textK;ctx.strokeText(txt,COVER.x,ty);
+    ctx.fillStyle='#fff';ctx.fillText(txt,COVER.x,ty);ctx.restore()}
+}
+
+/* ---------- 入力 ---------- */
+$('cover').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const img=new Image();img.onload=()=>{S.cover=img;S.palette=extract(img);autoColors();buildColors();render()};
+  img.src=URL.createObjectURL(f);
+};
+$('reauto').onclick=()=>{if(!S.palette.length){$('msg').textContent='先に書影を選んでください。';return}autoColors();buildColors();render()};
+const counter=()=>{$('kc').textContent=$('kanso').value.replace(/\n/g,'').length+'文字';$('mc').textContent=$('matome').value.replace(/\n/g,'').length+'文字'};
+['kanso','matome','credit'].forEach(id=>$(id).addEventListener('input',()=>{counter();render()}));
+['shd','kBold','kFont','kRule','mBold','mFont','mEdge'].forEach(id=>$(id).addEventListener('change',render));
+['kAuto','kSize','mAuto','mSize'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>{
+  for(const p of ['k','m']){if(!$(p+'Auto').checked&&$(p+'Size').disabled)$(p+'Size').value=lastSz[p];$(p+'Size').disabled=$(p+'Auto').checked}
+  render()})));
+
+/* ---------- 位置 ---------- */
+let drag=null;
+const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
+cv.addEventListener('pointerdown',e=>{if(!$('mv').checked)return;const [x,y]=pt(e);
+  for(let i=hits.length-1;i>=0;i--){const h=hits[i];if(x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h){drag={id:h.id,x,y,o:[...off[h.id]]};cv.setPointerCapture(e.pointerId);e.preventDefault();break}}});
+cv.addEventListener('pointermove',e=>{if(!drag)return;const [x,y]=pt(e);off[drag.id]=[drag.o[0]+x-drag.x,drag.o[1]+y-drag.y];render()});
+['pointerup','pointercancel'].forEach(ev=>cv.addEventListener(ev,()=>{
+  // 罫線モードの感想は、上下位置を罫線の間隔にスナップ
+  if(drag&&drag.id==='k'&&$('kRule').checked){off.k[1]=Math.round(off.k[1]/RULE.pitch)*RULE.pitch;render()}
+  drag=null}));
+$('mv').addEventListener('change',()=>{cv.style.cursor=$('mv').checked?'move':'default';cv.style.touchAction=$('mv').checked?'none':'auto'});
+$('rs').onclick=()=>{for(const k in off)off[k]=[0,0];render()};
+document.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{const [dx,dy]=b.dataset.d.split(',').map(Number),s=+$('stp').value||1,o=off[$('tg').value];o[0]+=dx*s;o[1]+=dy*s;render()});
+
+/* ---------- シート貼り付け ---------- */
+let shRows=[];
+function shApply(i){
+  const r=shRows[i];if(!r)return;
+  const g=k=>String(r[k]==null?'':r[k]).trim();
+  $('credit').value=g(1);$('kanso').value=g(2);$('matome').value=g(3);
+  counter();render();
+}
+$('shRow').onchange=()=>shApply(+$('shRow').value);
+function parseTable(t){
+  const d=t.split(/\r?\n/)[0].indexOf('\t')>=0?'\t':',',rows=[];let row=[],c='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"'&&c==='')q=true;
+    else if(ch===d){row.push(c);c=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;row.push(c);c='';rows.push(row);row=[]}
+    else c+=ch}
+  if(c!==''||row.length){row.push(c);rows.push(row)}
+  return rows;
+}
+function shFill(vals){
+  const msg=$('shMsg'),sel=$('shRow');
+  if(vals.length&&String(vals[0][0]||'').trim()==='タイトル')vals=vals.slice(1);
+  shRows=vals.filter(x=>Array.isArray(x)&&x.some(c=>String(c==null?'':c).trim()));
+  sel.innerHTML='';
+  shRows.forEach((x,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'件目: '+(String(x[0]||'').trim()||'（無題）');sel.appendChild(o)});
+  if(!shRows.length){sel.style.display='none';msg.textContent='データの行が見つかりませんでした。'}
+  else{sel.style.display='';shApply(0);msg.textContent=shRows.length+'件読み込みました。選んだ行が入力欄に入ります。'}
+}
+$('shPasteBtn').onclick=()=>{const t=$('shPaste').value;if(!t.trim()){$('shMsg').textContent='貼り付け欄が空です。';return}shFill(parseTable(t))};
+
+/* ---------- 保存 ---------- */
+$('dl').onclick=()=>{
+  cv.toBlob(async blob=>{
+    let dl=null;try{dl=await claude.use('downloads')}catch(e){}
+    if(!dl){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='感想.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);$('msg').textContent='';return}
+    try{await dl.save({filename:'感想.png',data:blob});$('msg').textContent=''}
+    catch(e){if(e.code!=='declined')$('msg').textContent='保存できませんでした：'+(e.message||e.code)}
+  },'image/png');
+};
+buildColors();
+</script>
+</body>
+</html>
