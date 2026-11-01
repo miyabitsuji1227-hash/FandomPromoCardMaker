@@ -37,6 +37,21 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 .pad{display:flex;gap:6px;margin-top:6px}
 .pad button,.sbtn{flex:1;padding:8px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer}
 .note{font-size:12px;color:var(--sub);margin-top:6px}
+.stp{display:inline-flex;align-items:center;gap:4px}
+.stp button{width:36px;height:34px;font:inherit;font-size:18px;font-weight:700;line-height:1;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.stp input[type=number]{width:64px;text-align:center}
+
+/* スマホ：プレビューを画面下に固定 */
+#pvToggle{display:none}
+@media(max-width:900px){
+  .preview{position:fixed;top:auto;left:0;right:0;bottom:0;z-index:20;margin:0;border-radius:12px 12px 0 0;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 18px rgba(0,0,0,.18);max-height:50vh;display:flex;flex-direction:column}
+  .preview>.sz{margin:0 0 6px!important;font-size:12px;flex-wrap:nowrap}
+  .preview>.sz label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .preview canvas{width:auto;height:auto;max-width:100%;max-height:calc(50vh - 56px);margin:0 auto}
+  .preview .note{display:none}
+  #pvToggle{display:inline-block}
+  .preview.min canvas{display:none}
+}
 </style>
 </head>
 <body>
@@ -55,6 +70,7 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 
 <label class="f">① 書影（画像を選択）</label>
 <input type="file" id="cover" accept="image/*">
+<div class="note" id="cmsg"></div>
 <label style="font-size:13px;display:block;margin-top:6px"><input type="checkbox" id="shd" checked> 書影に影をつける</label>
 <label class="f">書影の出典（左下に小さく表示）</label>
 <input type="text" id="credit" placeholder="例: 版元ドットコム">
@@ -66,18 +82,20 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 <label class="f">③ まとめ（「つまり ○○ ってこと！」の○○）</label>
 <textarea id="matome" placeholder="例: 全人類読むべき" style="min-height:44px"></textarea>
 <div class="cnt" id="mc">0文字</div>
+<button type="button" class="sbtn" id="clr" style="width:100%;margin-top:8px">入力内容をクリア（感想・まとめ・出典）</button>
 
 <h2>文字の設定</h2>
-<div class="sz"><span>感想</span><label><input type="checkbox" id="kAuto" checked> 自動</label><input type="number" id="kSize" min="8" max="120" value="30" disabled><span>px</span><label><input type="checkbox" id="kBold" checked> 太字</label></div>
+<div class="sz"><span>感想</span><label><input type="checkbox" id="kAuto" checked> 自動</label><span class="stp"><button type="button" data-t="kSize" data-s="-1">−</button><input type="number" id="kSize" min="8" max="120" value="30" disabled><button type="button" data-t="kSize" data-s="1">＋</button></span><span>px</span><label><input type="checkbox" id="kBold" checked> 太字</label></div>
 <div class="sz"><span></span><select id="kFont"></select><label><input type="checkbox" id="kRule" checked> 罫線に沿わせる</label></div>
-<div class="sz"><span>まとめ</span><label><input type="checkbox" id="mAuto" checked> 自動</label><input type="number" id="mSize" min="8" max="160" value="64" disabled><span>px</span><label><input type="checkbox" id="mBold" checked> 太字</label></div>
+<div class="sz"><span>まとめ</span><label><input type="checkbox" id="mAuto" checked> 自動</label><span class="stp"><button type="button" data-t="mSize" data-s="-1">−</button><input type="number" id="mSize" min="8" max="160" value="64" disabled><button type="button" data-t="mSize" data-s="1">＋</button></span><span>px</span><label><input type="checkbox" id="mBold" checked> 太字</label></div>
 <div class="sz"><span></span><select id="mFont"></select><label><input type="checkbox" id="mEdge" checked> 白フチ</label></div>
-<div class="sz"><span>つまり</span><input type="number" id="tsSc" min="20" max="200" step="5" value="100"><span>%</span><span style="width:auto;font-weight:700;margin-left:8px">ってこと！</span><input type="number" id="ttSc" min="20" max="200" step="5" value="100"><span>%</span></div>
+<div class="sz"><span>つまり</span><span class="stp"><button type="button" data-t="tsSc" data-s="-5">−</button><input type="number" id="tsSc" min="20" max="200" step="5" value="100"><button type="button" data-t="tsSc" data-s="5">＋</button></span><span>%</span></div>
+<div class="sz"><span style="width:auto;min-width:56px;font-weight:700">ってこと！</span><span class="stp"><button type="button" data-t="ttSc" data-s="-5">−</button><input type="number" id="ttSc" min="20" max="200" step="5" value="100"><button type="button" data-t="ttSc" data-s="5">＋</button></span><span>%</span></div>
 <div class="note">「つまり」「ってこと！」を小さくすると、間のまとめ欄が広がり、まとめの文字が大きく入ります（まとめが「自動」のとき）。</div>
 <div class="note">「罫線に沿わせる」は、文字が収まる間は1行ずつ罫線の上に並べます。長すぎて収まらないときは自動で行間を詰めます。</div>
 
 <label class="f">位置の微調整</label>
-<div class="sz"><select id="tg"><option value="k">感想</option><option value="m">まとめ</option><option value="ts">つまり</option><option value="tt">ってこと！</option></select><span style="width:auto">移動量</span><input type="number" id="stp" min="1" max="200" value="5"><span>px</span></div>
+<div class="sz"><select id="tg"><option value="k">感想</option><option value="m">まとめ</option><option value="ts">つまり</option><option value="tt">ってこと！</option></select><span style="width:auto">移動量</span><span class="stp"><button type="button" data-t="stp" data-s="-1">−</button><input type="number" id="stp" min="1" max="200" value="5"><button type="button" data-t="stp" data-s="1">＋</button></span><span>px</span></div>
 <div class="pad"><button type="button" data-d="-1,0">←</button><button type="button" data-d="0,-1">↑</button><button type="button" data-d="0,1">↓</button><button type="button" data-d="1,0">→</button></div>
 
 <h2>色（書影から自動作成。クリックで変更）</h2>
@@ -88,7 +106,7 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 <div class="note" id="msg"></div>
 </section>
 <section class="panel preview">
-<div class="sz" style="margin:0 0 8px"><label><input type="checkbox" id="mv"> ドラッグで文字の位置を動かす（感想・まとめ・つまり・ってこと！）</label><button id="rs" type="button" class="sbtn" style="flex:0 0 auto;margin-left:auto;padding:4px 8px;font-size:12px">位置をリセット</button></div>
+<div class="sz" style="margin:0 0 8px"><label><input type="checkbox" id="mv"> ドラッグで文字の位置を動かす（感想・まとめ・つまり・ってこと！）</label><button id="rs" type="button" class="sbtn" style="flex:0 0 auto;margin-left:auto;padding:4px 8px;font-size:12px">位置をリセット</button><button id="pvToggle" type="button" class="sbtn" style="flex:0 0 auto;padding:4px 8px;font-size:12px">たたむ</button></div>
 <canvas id="cv" width="1920" height="1080"></canvas>
 <div class="note">1920×1080。保存できない環境では、画像を長押し／右クリックで保存してください。</div>
 </section>
@@ -325,11 +343,24 @@ function render(){
 }
 
 /* ---------- 入力 ---------- */
-$('cover').onchange=e=>{
-  const f=e.target.files[0];if(!f)return;
-  const img=new Image();img.onload=()=>{S.cover=img;try{S.palette=extract(img)}catch(e){S.palette=[]}autoColors();buildColors();render()};
-  img.src=URL.createObjectURL(f);
-};
+function useCover(img){S.cover=img;try{S.palette=extract(img)}catch(e){S.palette=[]}autoColors();buildColors();render();$('cmsg').textContent=''}
+function coverFail(f){$('cmsg').textContent='この画像は読み込めませんでした（'+(f.type||f.name)+'、'+Math.round(f.size/1024)+'KB）。別の画像で試すか、スクリーンショットを撮ってその画像を選んでみてください。'}
+// 画像ファイルをいったん中身ごと読み込んでから表示する（端末によっては選択欄を空にするとファイルが読めなくなるため）
+function loadCover(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  $('cmsg').textContent='書影を読み込み中…';
+  const done=()=>{input.value=''};  // 同じ画像を選び直しても反応するように
+  const viaBitmap=()=>{
+    if(!window.createImageBitmap){coverFail(f);done();return}
+    createImageBitmap(f).then(bm=>{const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);
+      c.naturalWidth=bm.width;c.naturalHeight=bm.height;useCover(c);done()}).catch(()=>{coverFail(f);done()});
+  };
+  const r=new FileReader();
+  r.onload=()=>{const img=new Image();img.onload=()=>{useCover(img);done()};img.onerror=viaBitmap;img.src=r.result};
+  r.onerror=viaBitmap;
+  r.readAsDataURL(f);
+}
+$('cover').addEventListener('change',e=>loadCover(e.target));
 $('reauto').onclick=()=>{if(!S.palette.length){$('msg').textContent='先に書影を選んでください。';return}autoColors();buildColors();render()};
 const counter=()=>{$('kc').textContent=$('kanso').value.replace(/\n/g,'').length+'文字';$('mc').textContent=$('matome').value.replace(/\n/g,'').length+'文字'};
 ['kanso','matome','credit'].forEach(id=>$(id).addEventListener('input',()=>{counter();render()}));
@@ -383,6 +414,39 @@ function shFill(vals){
   else{sel.style.display='';shApply(0);msg.textContent=shRows.length+'件読み込みました。選んだ行が入力欄に入ります。'}
 }
 $('shPasteBtn').onclick=()=>{const t=$('shPaste').value;if(!t.trim()){$('shMsg').textContent='貼り付け欄が空です。';return}shFill(parseTable(t))};
+
+/* ---------- −／＋ボタン（長押しで連続） ---------- */
+function bump(id,d){
+  const el=$(id),auto={kSize:'kAuto',mSize:'mAuto'}[id];
+  if(auto&&$(auto).checked){$(auto).checked=false;el.disabled=false;el.value=lastSz[id[0]]}  // 自動中なら今のサイズから手動に切り替え
+  const v=Math.min(+el.max,Math.max(+el.min,(+el.value||0)+d));el.value=v;
+  el.dispatchEvent(new Event('input'));
+}
+document.querySelectorAll('.stp button').forEach(b=>{
+  let t1=null,t2=null;const stop=()=>{clearTimeout(t1);clearInterval(t2);t1=t2=null};
+  b.addEventListener('pointerdown',e=>{e.preventDefault();const f=()=>bump(b.dataset.t,+b.dataset.s);f();
+    t1=setTimeout(()=>{t2=setInterval(f,90)},450)});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+});
+/* ---------- 入力内容のクリア（設定はそのまま） ---------- */
+let undoBuf=null,undoTimer=null;
+$('clr').onclick=()=>{
+  const ids=['kanso','matome','credit'];
+  if(undoBuf){ids.forEach(id=>$(id).value=undoBuf[id]);undoBuf=null;clearTimeout(undoTimer);$('clr').textContent='入力内容をクリア（感想・まとめ・出典）';counter();render();return}
+  if(!ids.some(id=>$(id).value))return;
+  undoBuf={};ids.forEach(id=>{undoBuf[id]=$(id).value;$(id).value=''});
+  $('clr').textContent='元に戻す（クリアを取り消し）';counter();render();
+  clearTimeout(undoTimer);undoTimer=setTimeout(()=>{undoBuf=null;$('clr').textContent='入力内容をクリア（感想・まとめ・出典）'},8000);
+};
+
+/* ---------- スマホ：固定プレビューの分だけ下に余白を空ける ---------- */
+(()=>{const pv=document.querySelector('.preview'),mn=document.querySelector('main');
+  const fit=()=>{mn.style.paddingBottom=getComputedStyle(pv).position==='fixed'?(pv.offsetHeight+16)+'px':''};
+  try{new ResizeObserver(fit).observe(pv)}catch(e){}
+  addEventListener('resize',fit);fit();
+  $('pvToggle').onclick=()=>{pv.classList.toggle('min');$('pvToggle').textContent=pv.classList.contains('min')?'ひらく':'たたむ';fit()};
+})();
 
 /* ---------- 保存 ---------- */
 $('dl').onclick=()=>{
