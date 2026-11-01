@@ -30,6 +30,18 @@ textarea{resize:vertical;min-height:62px}
 canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid var(--line)}
 .sz{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:6px}.sz span{width:56px;font-weight:700}.sz input[type=range]{flex:1}.sz b{width:24px;text-align:right}.sz input[type=number],.sz select{font:inherit;font-size:13px;padding:4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}.sz input[type=number]{width:72px}.pad{display:flex;gap:6px;margin-top:6px}.pad button{flex:1;padding:8px;font:inherit;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer}.sw button.auto{width:auto;padding:0 8px;font-size:12px;color:var(--ink);background:var(--bg)}
 .note{font-size:12px;color:var(--sub);margin-top:8px}
+
+.nudge{flex:0 0 auto;width:40px;height:40px;padding:0;font:inherit;font-size:20px;line-height:1;font-weight:700;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);cursor:pointer;touch-action:manipulation}
+.nudge:active{background:var(--line)}
+.clr{width:100%;margin-top:12px;padding:10px;font:inherit;font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);cursor:pointer}
+.clr.arm{background:#c0392b;border-color:#c0392b;color:#fff}
+.sz{flex-wrap:wrap}
+@media(max-width:900px){
+  body{padding-bottom:var(--pvh,45vh)}
+  .preview{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:20;border-radius:12px 12px 0 0;border-width:1px 0 0;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.18)}
+  .preview canvas{width:auto;max-width:100%;max-height:38vh;margin:0 auto}
+  .preview .note{display:none}
+}
 </style>
 </head>
 <body>
@@ -45,6 +57,7 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 </details>
 <label class="f">① 書影（画像を選択）</label>
 <input type="file" id="cover" accept="image/*">
+<div class="note" id="cvMsg"></div>
 <label style="font-size:13px;display:block;margin-top:6px"><input type="checkbox" id="shd" checked> 書影に影をつける</label>
 <label class="f">書影の出典（左下に小さく表示）</label>
 <input type="text" id="credit" placeholder="例: 版元ドットコム">
@@ -54,12 +67,13 @@ canvas{width:100%;height:auto;display:block;border-radius:6px;border:1px solid v
 <textarea id="p1" placeholder="ポイント1"></textarea><div class="cnt" id="c1"></div>
 <textarea id="p2" placeholder="ポイント2"></textarea><div class="cnt" id="c2"></div>
 <textarea id="p3" placeholder="ポイント3"></textarea><div class="cnt" id="c3"></div>
+<button type="button" class="clr" id="clr">入力内容をクリア（あらすじ・オススメ・出典）</button>
 <label class="f">文字サイズ</label>
-<div class="sz"><span>あらすじ</span><label><input type="checkbox" id="aAuto" checked> 自動</label><input type="number" id="aSize" min="8" max="120" step="1" value="32" disabled><span style="width:auto">px</span></div>
-<div class="sz"><span>オススメ</span><label><input type="checkbox" id="oAuto" checked> 自動</label><input type="number" id="oSize" min="8" max="120" step="1" value="28" disabled><span style="width:auto">px</span></div>
+<div class="sz"><span>あらすじ</span><label><input type="checkbox" id="aAuto" checked> 自動</label><input type="number" id="aSize" min="8" max="120" step="1" value="32" disabled><button type="button" class="nudge" data-t="aSize" data-v="-1" aria-label="1小さく">−</button><button type="button" class="nudge" data-t="aSize" data-v="1" aria-label="1大きく">＋</button><span style="width:auto">px</span></div>
+<div class="sz"><span>オススメ</span><label><input type="checkbox" id="oAuto" checked> 自動</label><input type="number" id="oSize" min="8" max="120" step="1" value="28" disabled><button type="button" class="nudge" data-t="oSize" data-v="-1" aria-label="1小さく">−</button><button type="button" class="nudge" data-t="oSize" data-v="1" aria-label="1大きく">＋</button><span style="width:auto">px</span></div>
 <div class="note">「自動」をオフにすると、枠からはみ出しても指定サイズのまま表示します。</div>
 <label class="f">位置の微調整</label>
-<div class="sz"><select id="tg"><option value="syn">あらすじ</option><option value="p1">オススメ1</option><option value="p2">オススメ2</option><option value="p3">オススメ3</option></select><span style="width:auto">移動量</span><input type="number" id="stp" min="1" max="200" step="1" value="5"><span style="width:auto">px</span></div>
+<div class="sz"><select id="tg"><option value="syn">あらすじ</option><option value="p1">オススメ1</option><option value="p2">オススメ2</option><option value="p3">オススメ3</option></select><span style="width:auto">移動量</span><input type="number" id="stp" min="1" max="200" step="1" value="5"><button type="button" class="nudge" data-t="stp" data-v="-1" aria-label="1小さく">−</button><button type="button" class="nudge" data-t="stp" data-v="1" aria-label="1大きく">＋</button><span style="width:auto">px</span></div>
 <div class="pad"><button type="button" data-d="-1,0">←</button><button type="button" data-d="0,-1">↑</button><button type="button" data-d="0,1">↓</button><button type="button" data-d="1,0">→</button></div>
 <label class="f">色（書影から自動抽出。クリックで変更）</label>
 <div id="colors"></div>
@@ -221,8 +235,23 @@ function render(){
   $('dl').disabled=false;
 }
 $('cover').onchange=e=>{
-  const f=e.target.files[0];if(!f)return;
-  const img=new Image();img.onload=()=>{S.cover=img;setPalette(img);render()};
+  const inp=e.target,f=inp.files[0],msg=$('cvMsg');if(!f)return;
+  msg.textContent='読み込み中…';
+  const fail=()=>{msg.textContent='この画像は読み込めませんでした。JPEGかPNGの画像を選んでください（HEICなどは非対応のことがあります）。';inp.value=''};
+  const done=img=>{
+    /* 大きすぎる写真（スマホの数千px）は、扱いやすい大きさに縮めてから使う */
+    const M=2400,w=img.naturalWidth,h=img.naturalHeight;
+    if(!w||!h)return fail();
+    const use=im=>{S.cover=im;setPalette(im);render();msg.textContent='';inp.value=''};
+    if(Math.max(w,h)<=M)return use(img);
+    const k=M/Math.max(w,h),c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    const s2=new Image();s2.onload=()=>use(s2);s2.onerror=fail;s2.src=c.toDataURL('image/jpeg',.92);
+  };
+  /* まず通常の方法、だめなら別の方法（FileReader）でもう一度 */
+  const img=new Image();
+  img.onload=()=>done(img);
+  img.onerror=()=>{const r=new FileReader();r.onload=()=>{const i2=new Image();i2.onload=()=>done(i2);i2.onerror=fail;i2.src=r.result};r.onerror=fail;r.readAsDataURL(f)};
   img.src=URL.createObjectURL(f);
 };
 ['title','p1','p2','p3','credit'].forEach(id=>$(id).addEventListener('input',()=>{
@@ -286,6 +315,28 @@ $('dl').onclick=()=>{
   },'image/png');
 };
 buildColors();
+
+/* サイズの＋−ボタン：自動のときは自動をはずして、いまのサイズから1ずつ変える */
+document.querySelectorAll('.nudge').forEach(b=>b.addEventListener('click',()=>{
+  const inp=$(b.dataset.t),au=$(b.dataset.t[0]+'Auto');
+  if(au&&au.checked){au.checked=false;au.dispatchEvent(new Event('change'))}
+  const lo=+inp.min||1,hi=+inp.max||999;
+  inp.value=Math.min(hi,Math.max(lo,(+inp.value||lo)+(+b.dataset.v)));
+  inp.dispatchEvent(new Event('input'));
+}));
+/* 一括クリア：文字だけ消す（フォントやサイズ、色、位置の設定はそのまま）。誤タップ防止に2回押し */
+(()=>{const b=$('clr'),txt=b.textContent;let tm=0;
+  b.addEventListener('click',()=>{
+    if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='もう一度押すと消えます';tm=setTimeout(()=>{b.classList.remove('arm');b.textContent=txt},3000);return}
+    clearTimeout(tm);b.classList.remove('arm');b.textContent=txt;
+    ['title','p1','p2','p3','credit'].forEach(id=>{$(id).value=''});
+    ['c1','c2','c3'].forEach(c=>$(c).textContent='');
+    render();
+  });
+})();
+/* スマホ：下に固定したプレビューの高さ分だけ、ページの下に余白をあける */
+(()=>{const pv=document.querySelector('.preview');if(!pv||!window.ResizeObserver)return;
+  new ResizeObserver(()=>document.documentElement.style.setProperty('--pvh',pv.offsetHeight+'px')).observe(pv)})();
 </script>
 </body>
 </html>
